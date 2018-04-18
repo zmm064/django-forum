@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect;
 from .models import Board, Topic, Post
-from .forms import NewTopicForm
+from .forms import NewTopicForm, PostForm
 
 def home(request):
     boards = Board.objects.all()
@@ -33,7 +33,19 @@ def new_topic(request, pk):
             topic = topic,
             created_by=request.user,
         )
-        return redirect(board)
+        return redirect('topic_posts', pk=pk, topic_pk=topic.pk)
     return render(request, 'new_topic.html', {'board': board, 'form': form})
 
 
+@login_required
+def reply_topic(request, pk, topic_pk):
+    # 将topic和form传过去
+    topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
+    form = PostForm(request.POST or None)
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.topic = topic
+        post.created_by = request.user
+        post.save()
+        return redirect('topic_posts', pk=pk, topic_pk=topic_pk)
+    return render(request, 'reply_topic.html', {'topic': topic, 'form': form})
