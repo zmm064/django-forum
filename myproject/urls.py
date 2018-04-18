@@ -31,3 +31,37 @@ urlpatterns = [
     url(r'^boards/(?P<pk>\d+)/new/$', views.new_topic, name='new_topic'),
     url(r'^admin/', admin.site.urls),
 ]
+
+
+password_reset = [
+    url(r'^reset/$',
+        auth_views.PasswordResetView.as_view(
+            # 带有表单的页面，用于启动重置过程
+            template_name='password_reset.html',
+            # 发送给用户的电子邮件正文
+            email_template_name='password_reset_email.html',
+            # 电子邮件的主题行，它应该是单行文件
+            subject_template_name='password_reset_subject.txt'
+            ),
+        name='password_reset'),
+    url(r'^reset/done/$',
+        auth_views.PasswordResetDoneView.as_view(
+            # 一个成功的页面，表示过程已启动，指示用户检查其邮件
+            template_name='password_reset_done.html'
+            ),
+        name='password_reset_done'),
+    url(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        auth_views.PasswordResetConfirmView.as_view(
+            # 检查通过电子邮件发送token的页面
+            template_name='password_reset_confirm.html'
+            ),
+        name='password_reset_confirm'),
+    url(r'^reset/complete/$',
+        auth_views.PasswordResetCompleteView.as_view(
+            # 告诉用户重置是否成功的页面
+            template_name='password_reset_complete.html'
+            ),
+        name='password_reset_complete')
+]
+
+urlpatterns.extend(password_reset)
