@@ -64,4 +64,20 @@ password_reset = [
         name='password_reset_complete')
 ]
 
+password_change = [
+    url(r'^settings/password/$', 
+        # 如果用户没有登录，Django会将他们重定向到登录页面
+        # 我们必须在settings.py中定义我们应用程序的登录URL
+        auth_views.PasswordChangeView.as_view(
+            template_name='password_change.html'
+            ),
+        name='password_change'),
+    url(r'^settings/password/done/$', 
+        auth_views.PasswordChangeDoneView.as_view(
+            template_name='password_change_done.html'
+            ),
+        name='password_change_done'),
+]
+
 urlpatterns.extend(password_reset)
+urlpatterns.extend(password_change)
