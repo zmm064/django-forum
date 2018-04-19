@@ -1,14 +1,16 @@
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect;
+from django.contrib.auth.models import User
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Count
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
 from django.utils import timezone
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.views.generic import UpdateView, ListView
-from .models import Board, Topic, Post
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView, UpdateView
+
 from .forms import NewTopicForm, PostForm
+from .models import Board, Post, Topic
 
 # def home(request):
 #     boards = Board.objects.all()
@@ -134,3 +136,6 @@ class PostUpdateView(UpdateView):
         post.updated_at = timezone.now()
         post.save()
         return redirect('topic_posts', pk=post.topic.board.pk, topic_pk=post.topic.pk)
+
+
+

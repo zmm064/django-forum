@@ -85,6 +85,8 @@ password_change = [
             template_name='password_change_done.html'
             ),
         name='password_change_done'),
+    url(r'^settings/account/$',
+        accounts_views.UserUpdateView.as_view(), name='my_account'),
 ]
 
 urlpatterns.extend(password_reset)
