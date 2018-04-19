@@ -5,25 +5,81 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect;
 from django.db.models import Count
 from django.utils import timezone
-from django.views.generic import UpdateView
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic import UpdateView, ListView
 from .models import Board, Topic, Post
 from .forms import NewTopicForm, PostForm
 
-def home(request):
-    boards = Board.objects.all()
-    return render(request, 'home.html', {'boards': boards})
+# def home(request):
+#     boards = Board.objects.all()
+#     return render(request, 'home.html', {'boards': boards})
 
-def board_topics(request, pk):
-    board = get_object_or_404(Board, pk=pk)
-    # topics查询集中包含有replies属性
-    topics = board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
-    return render(request, 'topics.html', {'board': board, 'topics': topics})
+class BoardListView(ListView):
+    model = Board
+    context_object_name = 'boards'
+    template_name = 'home.html'
 
-def topic_posts(request, pk, topic_pk):
-    topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
-    topic.views += 1
-    topic.save()
-    return render(request, 'topic_posts.html', {'topic': topic})
+
+# def board_topics(request, pk):
+#     board = get_object_or_404(Board, pk=pk)
+#     # topics查询集中包含有replies属性
+#     queryset = board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
+#     # 默认返回第一页的数据
+#     page = request.GET.get('page', 1)
+#     paginator = Paginator(queryset, 20)
+#     try:
+#         topics = paginator.page(page)
+#     except PageNotAnInteger:
+#         topics = paginator.page(1)
+#     except EmptyPage:
+#         topics = paginator.page(paginator.num_pages)
+
+#     return render(request, 'topics.html', {'board': board, 'topics': topics})
+
+
+class TopicListView(ListView):
+    model = Topic
+    context_object_name = 'topics'
+    template_name = 'topics.html'
+    paginate_by = 20
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['board'] = self.board
+        return context
+
+    def get_queryset(self):
+        self.board = get_object_or_404(Board, pk=self.kwargs.get('pk'))
+        queryset = self.board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
+        return queryset
+
+
+
+# def topic_posts(request, pk, topic_pk):
+#     topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
+#     topic.views += 1
+#     topic.save()
+#     return render(request, 'topic_posts.html', {'topic': topic})
+
+
+class PostListView(ListView):
+    model = Post
+    context_object_name = 'posts'
+    template_name = 'topic_posts.html'
+    paginate_by = 2
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.topic.views += 1
+        self.topic.save()
+        context['topic'] = self.topic
+        return context
+
+    def get_queryset(self):
+        self.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
+        queryset = self.topic.posts.order_by('created_at')
+        return queryset
+
 
 @login_required
 def new_topic(request, pk):
@@ -68,6 +124,7 @@ class PostUpdateView(UpdateView):
     context_object_name = 'post'
 
     def get_queryset(self):
+        # 限定用户可以修改的post
         queryset = super().get_queryset()
         return queryset.filter(created_by=self.request.user)
 
