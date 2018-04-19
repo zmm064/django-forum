@@ -53,6 +53,7 @@
         <!-- <script src="https://cdn.bootcss.com/popper.js/1.12.5/umd/popper.min.js"></script> -->
         <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
         <script src="{% static 'js/bootstrap.min.js' %}"></script>
+        {% block javascript %}{% endblock %}
     </div>
     {% endblock body %}
 </body>
